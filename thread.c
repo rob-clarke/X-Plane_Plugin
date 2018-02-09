@@ -64,7 +64,7 @@ WINAPI DWORD launcher(void *in)
 	arg = ((threadin_t *)in)->arg;
 	free(in);
 	function(arg);
-	//pthread_exit(NULL); // TODO: windows thread exit function?
+	ExitThread(0);
 	return 0;
 }
 

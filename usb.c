@@ -534,6 +534,8 @@ static void input_thread(void *arg);
 static void output_thread(void *arg);
 
 static int device_scan_needed=1;
+static HDEVNOTIFY newdev_global = NULL;
+static HWND hWnd_global = NULL;
 
 // DispatchMessage ultimately causes this callback to be called
 LRESULT CALLBACK window_callback(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -771,8 +773,6 @@ int TeensyControls_usb_init(void)
 	GUID hid_guid;
 	WNDCLASS window;
 	DEV_BROADCAST_DEVICEINTERFACE notification_filter;
-	HWND hWnd;
-	HDEVNOTIFY newdev;
 	LPCTSTR name = TEXT("TeensyControls Plugin");
 
 	// windows will only deliver device change notifications to windows
@@ -789,9 +789,9 @@ int TeensyControls_usb_init(void)
 	window.lpszMenuName = NULL;
 	window.lpszClassName = name;
 	if (!RegisterClass(&window)) return 0; // unable to register notification window
-	hWnd = CreateWindow(name, NULL, 0, 50, 50, 50, 50, NULL, NULL, NULL, NULL);
-	printf("hWnd = %ld\n", (long)hWnd);
-	if (!hWnd) return 0; // unable to create notification window
+	hWnd_global = CreateWindow(name, NULL, 0, 50, 50, 50, 50, NULL, NULL, NULL, NULL);
+	printf("hWnd = %ld\n", (long)hWnd_global);
+	if (!hWnd_global) return 0; // unable to create notification window
 	//ShowWindow(hWnd, SW_SHOWNORMAL);
 	//UpdateWindow(hWnd);
 
@@ -801,8 +801,8 @@ int TeensyControls_usb_init(void)
         notification_filter.dbcc_size = sizeof(notification_filter);
         notification_filter.dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE;
         notification_filter.dbcc_classguid = hid_guid;
-        newdev = RegisterDeviceNotification(hWnd, &notification_filter, 0);
-        if (!newdev) return 0;  // unable to register device notification
+        newdev_global = RegisterDeviceNotification(hWnd_global, &notification_filter, 0);
+        if (!newdev_global) return 0;  // unable to register device notification
 	return 1;
 }
 
@@ -818,15 +818,17 @@ void TeensyControls_usb_close(void)
 			t->online = 0;
 			pthread_cond_signal(&t->output_event);
 			//Sadly, CancelIoEx only exists in Vista and later
-			//CancelIoEx(t->usb.handle, NULL);
+			CancelIoEx(t->usb.handle, NULL);
 			//instead, let's try something incredibly ugly.
 			//set both events, which hopefully will cause any
 			//GetOverlappedResult to end with an error
-			SetEvent(t->usb.rx_event);
-			SetEvent(t->usb.tx_event);
+			//SetEvent(t->usb.rx_event);
+			//SetEvent(t->usb.tx_event);
 		}
 	}
 	// TODO: destroy notification window, unregister notification?
+	DestroyWindow(hWnd_global);
+	UnregisterDeviceNotification(newdev_global);
 	// hopefully the threads will gracefully exit on their own?
 	while (++wait < 5 && num_thread_alive() > 0) {
 		Sleep(10);
