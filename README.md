@@ -72,6 +72,14 @@ Then simply edit the makefile and run make, as with the other systems.  A script
 
 This plugin has *never* been compiled on a native Windows system.  Paul does not use Windows and will not be pleased if asked any questions regarding how to build this code on Windows.  There is no technical support of any kind for this code, but especially when it comes to native Windows compilation, please do not ask.  Building on Linux is the best way.
 
+To build with the included Dockerfile:
+ - Build the docker image:
+   `docker build -t plugin-build .`
+ - Run it to build the plugin:
+   `docker run --name plugin plugin-build`
+ - Copy the binary out:
+   `docker cp plugin:/root/src/TeensyControls.xpl TeensyControls.xpl`
+
 
 Cross-build - multi arch ("fat") plugin
 ---------------------------------------
