@@ -669,6 +669,7 @@ static void input_thread(void *arg)
 	uint8_t buf[65];
 
 	printf("input_thread begin\n");
+	//XPLMDebugString("[TeensyControls] Input thread begin\n");
 	while (t->online) {
 		ResetEvent(&(t->usb.rx_event));
 		memset(&(t->usb.rx_ov), 0, sizeof(t->usb.rx_ov));
@@ -829,14 +830,17 @@ void TeensyControls_usb_close(void)
 	// TODO: destroy notification window, unregister notification?
 	DestroyWindow(hWnd_global);
 	UnregisterDeviceNotification(newdev_global);
+	//XPLMDebugString("[TeensyControls] Destroyed window and unregistered DeviceNotification\n");
 	// hopefully the threads will gracefully exit on their own?
 	while (++wait < 5 && num_thread_alive() > 0) {
 		Sleep(10);
 		printf("wait #%d for thread exit\n", wait);
+		//XPLMDebugString("[TeensyControls] Wait for threads to exit...\n");
 	}
 	// forcibly close everything
 	for (t = TeensyControls_first_teensy; t; t = t->next) {
 		printf("close USB device\n");
+		//XPLMDebugString("[TeensyControls] Forcibly close device\n");
 		CloseHandle(t->usb.rx_event);
 		CloseHandle(t->usb.tx_event);
 		CloseHandle(t->usb.handle);
@@ -846,6 +850,7 @@ void TeensyControls_usb_close(void)
 	while (++wait < 10 && num_thread_alive() > 0) {
 		Sleep(10);
 		printf("wait #%d for thread exit\n", wait);
+		//XPLMDebugString("[TeensyControls] Wait for threads to exit after force close...\n");
 	}
 	// TODO: violently kill any hung threads?
 }

@@ -49,8 +49,11 @@ PLUGIN_API int XPluginStart(char *name, char *sig, char *desc)
 PLUGIN_API void XPluginStop(void)
 {
 	printf("Plugin Stop\n");
+	//XPLMDebugString("[TeensyControls] Plugin Stop\n");
 	TeensyControls_usb_close();
+	//XPLMDebugString("[TeensyControls] USB close complete\n");
 	TeensyControls_delete_offline_teensy();
+	//XPLMDebugString("[TeensyControls] Offline teensy deleted\n");
 	printf("Plugin End\n");
 }
 
